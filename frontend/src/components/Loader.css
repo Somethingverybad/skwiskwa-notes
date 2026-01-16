@@ -1,0 +1,98 @@
+.loader-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-primary, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeOut 0.5s ease-out 1.5s forwards;
+}
+
+.loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.loader-logo {
+  width: 120px;
+  height: 120px;
+  animation: pulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+}
+
+.loader-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--bg-tertiary, #e8e8e8);
+  border-top: 5px solid var(--text-primary, #000000);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  transition: border-color var(--transition-fast);
+  margin-top: 8px;
+}
+
+.loader-text {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary, #000000);
+  margin: 0;
+  letter-spacing: 1px;
+  animation: fadeIn 0.6s ease-out 0.3s backwards;
+  margin-top: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.9;
+  }
+}
+
+/* Дополнительная анимация для SVG логотипа */
+.loader-logo {
+  transition: transform var(--transition-normal);
+}
+
+.loader-logo:hover {
+  transform: scale(1.05);
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Мобильная версия */
+@media (max-width: 768px) {
+  .loader-logo {
+    width: 96px;
+    height: 96px;
+  }
+
+  .loader-spinner {
+    width: 45px;
+    height: 45px;
+    border-width: 4px;
+  }
+
+  .loader-text {
+    font-size: 18px;
+  }
+}

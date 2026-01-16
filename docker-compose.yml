@@ -1,0 +1,86 @@
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: notion-backend
+    volumes:
+      - ./backend:/app
+      - backend-static:/app/staticfiles
+      - backend-media:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=*
+      - DATABASE_ENGINE=django.db.backends.sqlite3
+      - DATABASE_NAME=/app/db.sqlite3
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - notion-network
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: notion-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=notion_clone
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - notion-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: notion-frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    depends_on:
+      - backend
+    networks:
+      - notion-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: notion-nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - backend-static:/static:ro
+      - backend-media:/media:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - notion-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  backend-static:
+  backend-media:
+
+networks:
+  notion-network:
+    driver: bridge

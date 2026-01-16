@@ -1,0 +1,967 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Черно-белая палитра */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #e8e8e8;
+  --text-primary: #000000;
+  --text-secondary: #4a4a4a;
+  --text-tertiary: #8a8a8a;
+  --border-color: #d0d0d0;
+  --accent: #000000;
+  --hover-bg: rgba(0, 0, 0, 0.05);
+  --active-bg: rgba(0, 0, 0, 0.1);
+  --shadow: rgba(0, 0, 0, 0.1);
+  --shadow-hover: rgba(0, 0, 0, 0.15);
+  
+  /* Анимации */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Стили в стиле Notion */
+.notion-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 96px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notion-title {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 4px;
+  outline: none;
+  border: none;
+  width: 100%;
+  padding: 3px 2px;
+  background: transparent;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.notion-title:focus {
+  background: var(--hover-bg);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+
+.notion-title::placeholder {
+  color: var(--text-tertiary);
+  opacity: 1;
+  transition: opacity var(--transition-fast);
+}
+
+.notion-title:focus::placeholder {
+  opacity: 0.5;
+}
+
+.notion-block {
+  position: relative;
+  margin: 1px 0;
+  padding: 3px 2px;
+  min-height: 30px;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.notion-block:hover {
+  background: var(--hover-bg);
+}
+
+.notion-block:hover .block-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.block-actions {
+  position: absolute;
+  left: -40px;
+  top: 0;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all var(--transition-normal);
+}
+
+.block-actions button {
+  background: transparent;
+  border: none;
+  cursor: grab;
+  padding: 4px;
+  color: var(--text-tertiary);
+  font-size: 18px;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.block-actions button:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  transform: scale(1.1);
+}
+
+.block-actions button:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.notion-block input,
+.notion-block textarea {
+  font-size: 16px;
+  line-height: 1.5;
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  resize: none;
+  font-family: inherit;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.notion-block textarea {
+  overflow: hidden;
+}
+
+.notion-block input:focus,
+.notion-block textarea:focus {
+  background: var(--hover-bg);
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.notion-block[data-type="heading1"] textarea {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.notion-block[data-type="heading2"] textarea {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.notion-block[data-type="heading3"] textarea {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.notion-block[data-type="quote"] {
+  border-left: 3px solid var(--text-primary);
+  padding-left: 14px;
+  font-size: 16px;
+  font-style: italic;
+  transition: border-color var(--transition-fast);
+}
+
+.notion-block[data-type="divider"] {
+  height: 1px;
+  background: var(--border-color);
+  margin: 12px 0;
+  animation: expandWidth 0.5s ease-out;
+}
+
+@keyframes expandWidth {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.notion-block input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.notion-block input[type="checkbox"]:hover {
+  transform: scale(1.1);
+}
+
+.media-block {
+  margin: 8px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  animation: fadeInScale 0.4s ease-out;
+  transition: transform var(--transition-normal);
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.media-block:hover {
+  transform: scale(1.02);
+}
+
+.media-block img,
+.media-block video,
+.media-block audio {
+  max-width: 100%;
+  display: block;
+}
+
+.file-upload-zone {
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  background: var(--bg-secondary);
+}
+
+.file-upload-zone:hover,
+.file-upload-zone.active {
+  border-color: var(--text-primary);
+  background: var(--hover-bg);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 240px;
+  height: 100vh;
+  background: var(--bg-secondary);
+  padding: 20px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border-color);
+  transition: all var(--transition-normal);
+  animation: slideInLeft 0.4s ease-out;
+}
+
+.sidebar-title {
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.sidebar-item {
+  padding: 8px 12px;
+  margin: 2px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  animation: fadeInLeft 0.3s ease-out backwards;
+}
+
+.sidebar-item:nth-child(1) { animation-delay: 0.1s; }
+.sidebar-item:nth-child(2) { animation-delay: 0.15s; }
+.sidebar-item:nth-child(3) { animation-delay: 0.2s; }
+.sidebar-item:nth-child(4) { animation-delay: 0.25s; }
+.sidebar-item:nth-child(5) { animation-delay: 0.3s; }
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Улучшенные анимации для медиа блоков */
+.media-block img,
+.media-block video {
+  transition: transform var(--transition-normal), opacity var(--transition-normal);
+}
+
+.media-block:hover img,
+.media-block:hover video {
+  transform: scale(1.02);
+}
+
+/* Анимация для появления новых блоков */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.notion-block.new-block {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Плавное появление страницы */
+.app {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Улучшенные тени с анимацией */
+.sidebar-item.active,
+.add-page-btn:hover,
+.block-menu,
+.auth-card {
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: box-shadow var(--transition-normal);
+}
+
+.sidebar-item.active:hover,
+.add-page-btn:hover {
+  box-shadow: 0 4px 12px var(--shadow-hover);
+}
+
+.sidebar-item:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  transform: translateX(4px);
+}
+
+.sidebar-item.active {
+  background: var(--active-bg);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.sidebar-delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-tertiary);
+  opacity: 0.6;
+  transition: all var(--transition-fast);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-delete-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.sidebar-delete-btn:active {
+  transform: scale(0.95);
+}
+
+.add-page-btn {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-page-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--shadow);
+}
+
+.add-page-btn:active {
+  transform: translateY(0);
+}
+
+.main-content {
+  margin-left: 240px;
+  transition: margin-left var(--transition-normal);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.add-block-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: 8px 0;
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  transition: all var(--transition-fast);
+  animation: fadeIn 0.4s ease-out;
+}
+
+.add-block-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+  border-style: solid;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.add-block-btn:active {
+  transform: translateX(2px);
+}
+
+.block-menu {
+  position: absolute;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px var(--shadow-hover);
+  padding: 8px;
+  z-index: 1000;
+  min-width: 200px;
+  animation: fadeInScale 0.2s ease-out;
+  backdrop-filter: blur(10px);
+}
+
+.block-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.block-menu-item {
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  animation: fadeInLeft 0.2s ease-out backwards;
+}
+
+.block-menu-item:nth-child(1) { animation-delay: 0.05s; }
+.block-menu-item:nth-child(2) { animation-delay: 0.1s; }
+.block-menu-item:nth-child(3) { animation-delay: 0.15s; }
+.block-menu-item:nth-child(4) { animation-delay: 0.2s; }
+.block-menu-item:nth-child(5) { animation-delay: 0.25s; }
+.block-menu-item:nth-child(6) { animation-delay: 0.3s; }
+.block-menu-item:nth-child(7) { animation-delay: 0.35s; }
+.block-menu-item:nth-child(8) { animation-delay: 0.4s; }
+.block-menu-item:nth-child(9) { animation-delay: 0.45s; }
+.block-menu-item:nth-child(10) { animation-delay: 0.5s; }
+.block-menu-item:nth-child(11) { animation-delay: 0.55s; }
+
+.block-menu-item:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+.drag-overlay {
+  background: var(--bg-primary);
+  border: 2px solid var(--text-primary);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px var(--shadow-hover);
+  transform: rotate(2deg);
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: rotate(2deg) scale(1);
+  }
+  50% {
+    transform: rotate(2deg) scale(1.02);
+  }
+}
+
+/* Мобильный header */
+.mobile-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px var(--shadow);
+  animation: slideDown 0.3s ease-out;
+}
+
+.mobile-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60%;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.mobile-menu-btn {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1001;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 8px var(--shadow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  animation: fadeInScale 0.3s ease-out;
+}
+
+.mobile-menu-btn:hover {
+  background: var(--hover-bg);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px var(--shadow-hover);
+}
+
+.mobile-menu-btn:active {
+  transform: scale(0.95);
+}
+
+/* ============================================
+   МОБИЛЬНАЯ АДАПТАЦИЯ
+   ============================================ */
+
+/* Мобильные устройства (до 768px) */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -240px;
+    width: 240px;
+    transition: left var(--transition-normal);
+    z-index: 1000;
+    box-shadow: 4px 0 16px var(--shadow-hover);
+  }
+
+  .sidebar.open {
+    left: 0;
+    animation: slideInLeft 0.3s ease-out;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .sidebar-overlay.active {
+    display: block;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .notion-page {
+    padding: 20px 16px;
+    max-width: 100%;
+  }
+
+  .notion-title {
+    font-size: 28px;
+    padding: 8px 4px;
+  }
+
+  .notion-block[data-type="heading1"] textarea {
+    font-size: 24px;
+  }
+
+  .notion-block[data-type="heading2"] textarea {
+    font-size: 20px;
+  }
+
+  .notion-block[data-type="heading3"] textarea {
+    font-size: 18px;
+  }
+
+  .block-actions {
+    position: static;
+    opacity: 1;
+    margin-bottom: 8px;
+    padding: 4px 0;
+    transform: translateX(0);
+  }
+
+  .block-actions button {
+    padding: 8px;
+    font-size: 20px;
+  }
+
+  .file-upload-zone {
+    padding: 24px 16px;
+  }
+
+  .block-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    border-radius: 16px 16px 0 0;
+    max-height: 70vh;
+    overflow-y: auto;
+    min-width: auto;
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Планшеты (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .main-content {
+    margin-left: 200px;
+  }
+
+  .notion-page {
+    padding: 30px 48px;
+  }
+}
+
+/* Улучшения для touch устройств */
+@media (hover: none) and (pointer: coarse) {
+  .sidebar-item {
+    padding: 12px 8px;
+    min-height: 44px;
+  }
+
+  .add-page-btn {
+    padding: 12px;
+    min-height: 44px;
+  }
+
+  .block-menu-item {
+    padding: 12px;
+    min-height: 44px;
+  }
+
+  .add-block-btn {
+    padding: 12px 8px;
+    min-height: 44px;
+  }
+
+  .block-actions {
+    opacity: 1;
+  }
+}
+
+/* Предотвращение zoom при двойном тапе на iOS */
+input,
+textarea,
+select {
+  font-size: 16px !important;
+}
+
+/* Улучшения для PWA */
+@media (display-mode: standalone) {
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Desktop header */
+.desktop-header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  padding: 12px 20px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 8px var(--shadow);
+  animation: slideDown 0.3s ease-out;
+}
+
+.desktop-header-username {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.logout-button {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  font-weight: 500;
+}
+
+.logout-button:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.logout-button:active {
+  transform: translateY(0);
+}
+
+/* Безопасная зона для iPhone X и новее */
+@supports (padding: max(0px)) {
+  .sidebar,
+  .main-content {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+
+  .mobile-header {
+    padding-top: max(0px, env(safe-area-inset-top));
+  }
+}
+
+/* Плавные переходы для всех интерактивных элементов */
+button,
+a,
+.sidebar-item,
+.block-menu-item,
+input,
+textarea {
+  transition: all var(--transition-fast);
+  will-change: transform, opacity;
+}
+
+/* Улучшенная производительность анимаций */
+.notion-block,
+.sidebar-item,
+.block-menu-item {
+  will-change: transform, opacity;
+}
+
+/* Плавная прокрутка */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Улучшенный скроллбар */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+  transition: background var(--transition-fast);
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Улучшенные тени */
+.sidebar-item.active,
+.add-page-btn:hover,
+.block-menu {
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* Анимация появления блоков при загрузке */
+.notion-block {
+  animation: fadeInUp 0.4s ease-out backwards;
+}
+
+.notion-block:nth-child(1) { animation-delay: 0.05s; }
+.notion-block:nth-child(2) { animation-delay: 0.1s; }
+.notion-block:nth-child(3) { animation-delay: 0.15s; }
+.notion-block:nth-child(4) { animation-delay: 0.2s; }
+.notion-block:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Дополнительные стили для блоков */
+.checkbox-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checked-text {
+  text-decoration: line-through;
+  color: var(--text-tertiary);
+  transition: all var(--transition-fast);
+}
+
+.file-download-link {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.file-download-link:hover {
+  background: var(--hover-bg);
+  transform: translateX(4px);
+}
+
+.divider-block {
+  height: 1px;
+  background: var(--border-color);
+  margin: 12px 0;
+  animation: expandWidth 0.5s ease-out;
+}

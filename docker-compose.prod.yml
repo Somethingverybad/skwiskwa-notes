@@ -1,0 +1,86 @@
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: notion-backend-prod
+    volumes:
+      - backend-static:/app/staticfiles
+      - backend-media:/app/media
+    expose:
+      - "8000"
+    environment:
+      - DEBUG=0
+      - DJANGO_ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+      - DATABASE_ENGINE=django.db.backends.postgresql
+      - DATABASE_NAME=notion_clone
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=${DB_PASSWORD:-changeme}
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - notion-network
+    restart: always
+    command: gunicorn notion_clone.wsgi:application --bind 0.0.0.0:8000 --workers 4
+
+  db:
+    image: postgres:15-alpine
+    container_name: notion-db-prod
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=notion_clone
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-changeme}
+    networks:
+      - notion-network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: notion-frontend-prod
+    expose:
+      - "80"
+    environment:
+      - VITE_API_URL=https://yourdomain.com/api
+    networks:
+      - notion-network
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    container_name: notion-nginx-prod
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - backend-static:/static:ro
+      - backend-media:/media:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - notion-network
+    restart: always
+
+volumes:
+  postgres_data_prod:
+  backend-static:
+  backend-media:
+
+networks:
+  notion-network:
+    driver: bridge
