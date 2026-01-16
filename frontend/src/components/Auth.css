@@ -37,6 +37,7 @@
 }
 
 .auth-title {
+  font-family: 'SpecialElite', 'Cascadia Mono', monospace;
   margin-bottom: 32px;
   text-align: center;
   font-size: 28px;

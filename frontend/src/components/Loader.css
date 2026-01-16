@@ -38,6 +38,7 @@
 }
 
 .loader-text {
+  font-family: 'SpecialElite', 'Cascadia Mono', monospace;
   font-size: 20px;
   font-weight: 600;
   color: var(--text-primary, #000000);
