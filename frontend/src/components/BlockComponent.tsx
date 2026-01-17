@@ -3,7 +3,7 @@ import { Block } from '../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { FiMove, FiTrash2 } from 'react-icons/fi';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, Accept } from 'react-dropzone';
 
 interface BlockComponentProps {
   block: Block;
@@ -208,7 +208,7 @@ function getPlaceholder(blockType: string): string {
   }
 }
 
-function getAcceptTypes(blockType: string) {
+function getAcceptTypes(blockType: string): Accept | undefined {
   switch (blockType) {
     case 'image':
       return { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'] };
@@ -217,7 +217,7 @@ function getAcceptTypes(blockType: string) {
     case 'audio':
       return { 'audio/*': ['.mp3', '.wav', '.ogg'] };
     default:
-      return {};
+      return undefined;
   }
 }
 

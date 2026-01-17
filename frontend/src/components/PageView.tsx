@@ -10,10 +10,10 @@ import { FiPlus } from 'react-icons/fi';
 interface PageViewProps {
   page: Page;
   onUpdatePage: (pageId: number, data: Partial<Page>) => void;
-  onReload: () => void;
+  onReload?: () => void;
 }
 
-function PageView({ page, onUpdatePage, onReload }: PageViewProps) {
+function PageView({ page, onUpdatePage }: PageViewProps) {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [showBlockMenu, setShowBlockMenu] = useState(false);
   const [activeId, setActiveId] = useState<number | null>(null);

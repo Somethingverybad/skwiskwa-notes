@@ -3,39 +3,43 @@ services:
     build: 
       context: .
       dockerfile: backend/Dockerfile
-    container_name: notion-backend
+    container_name: notion-backend-prod
     volumes:
-      - ./backend:/app
       - backend-static:/app/staticfiles
       - backend-media:/app/media
-    ports:
-      - "8000:8000"
+      - ./backend:/app
+    expose:
+      - "8000"
     environment:
-      - DEBUG=1
-      - DJANGO_ALLOWED_HOSTS=*
-      - DATABASE_ENGINE=django.db.backends.sqlite3
-      - DATABASE_NAME=/app/db.sqlite3
+      - DEBUG=0
+      - DJANGO_ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+      - DATABASE_ENGINE=django.db.backends.postgresql
+      - DATABASE_NAME=notion_clonedo
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=${DB_PASSWORD:-changeme}
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
     depends_on:
       db:
         condition: service_healthy
     networks:
       - notion-network
-    restart: unless-stopped
+    restart: always
+    command: gunicorn notion_clone.wsgi:application --bind 0.0.0.0:8000 --workers 4
 
   db:
     image: postgres:15-alpine
-    container_name: notion-db
+    container_name: notion-db-prod
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_prod:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=notion_clone
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    ports:
-      - "5432:5432"
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-changeme}
     networks:
       - notion-network
-    restart: unless-stopped
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -43,44 +47,41 @@ services:
       retries: 5
 
   frontend:
-    build: 
+    build:
       context: ./frontend
-      dockerfile: Dockerfile
-    container_name: notion-frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    ports:
-      - "3000:3000"
+      dockerfile: Dockerfile.prod
+    container_name: notion-frontend-prod
+    expose:
+      - "80"
     environment:
-      - VITE_API_URL=http://localhost:8000/api
-    depends_on:
-      - backend
+      - VITE_API_URL=https://yourdomain.com/api
     networks:
       - notion-network
-    restart: unless-stopped
+    restart: always
 
-  nginx:
+  nginx-skwiskwa:
     image: nginx:alpine
-    container_name: notion-nginx
+    container_name: notion-nginx-prod
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - backend-static:/static:ro
       - backend-media:/media:ro
-    ports:
-      - "80:80"
+      - ./ssl:/etc/nginx/ssl:ro
+    expose:
+      - "80"
     depends_on:
       - backend
       - frontend
     networks:
       - notion-network
-    restart: unless-stopped
+    restart: always
 
 volumes:
-  postgres_data:
+  postgres_data_prod:
   backend-static:
   backend-media:
 
 networks:
   notion-network:
-    driver: bridge
+    external: true
+    name: notion-network

@@ -41,7 +41,7 @@ function Dashboard() {
       const response = await api.getPages();
       const pagesData = Array.isArray(response.data) 
         ? response.data 
-        : (response.data.results || []);
+        : ((response.data as any)?.results || []);
       
       setPages(pagesData);
       if (pagesData.length > 0 && !currentPage) {
