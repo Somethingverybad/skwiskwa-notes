@@ -17,10 +17,20 @@ function PageView({ page, onUpdatePage }: PageViewProps) {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [showBlockMenu, setShowBlockMenu] = useState(false);
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [titleValue, setTitleValue] = useState<string>(page.title || '');
 
   useEffect(() => {
     loadBlocks();
   }, [page.id]);
+
+  // Синхронизируем локальное состояние с пропсом page при его изменении
+  useEffect(() => {
+    // Обновляем только если значение действительно изменилось (не из нашего локального изменения)
+    const serverTitle = page.title || '';
+    if (serverTitle !== titleValue && document.activeElement?.className !== 'notion-title') {
+      setTitleValue(serverTitle);
+    }
+  }, [page.title]);
 
   const loadBlocks = async () => {
     try {
@@ -33,13 +43,16 @@ function PageView({ page, onUpdatePage }: PageViewProps) {
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
+    // Обновляем локальное состояние сразу для плавности ввода
+    setTitleValue(newTitle);
     // Разрешаем пустую строку - отправляем как есть
     onUpdatePage(page.id, { title: newTitle });
   };
   
   const handleTitleBlur = () => {
-    // При потере фокуса, если title пустой, оставляем пустым (бэкенд обработает)
-    // Но на фронтенде показываем placeholder
+    // При потере фокуса синхронизируем с серверным значением
+    const serverTitle = page.title || '';
+    setTitleValue(serverTitle);
   };
 
   const handleCreateBlock = async (blockType: string) => {
@@ -128,7 +141,7 @@ function PageView({ page, onUpdatePage }: PageViewProps) {
       <input
         type="text"
         className="notion-title"
-        value={page.title || ''}
+        value={titleValue}
         onChange={handleTitleChange}
         onBlur={handleTitleBlur}
         placeholder="Без названия"

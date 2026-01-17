@@ -13,8 +13,9 @@ class Page(models.Model):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
     
     def save(self, *args, **kwargs):
-        # Если title пустой, устанавливаем дефолтное значение
-        if not self.title or self.title.strip() == '':
+        # Если title пустой, устанавливаем дефолтное значение ТОЛЬКО при создании новой страницы
+        # При обновлении разрешаем пустое значение, чтобы пользователь мог стереть заголовок полностью
+        if self.pk is None and (not self.title or self.title.strip() == ''):
             self.title = 'Без названия'
         super().save(*args, **kwargs)
     

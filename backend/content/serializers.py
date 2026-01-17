@@ -42,10 +42,12 @@ class PageSerializer(serializers.ModelSerializer):
         }
     
     def validate_title(self, value):
-        # Разрешаем пустую строку, но нормализуем её
-        if value is None or value.strip() == '':
+        # Разрешаем пустую строку при обновлении
+        # При создании дефолтное значение будет установлено в модели
+        if value is None:
             return ''
-        return value.strip()
+        # Возвращаем как есть (включая пустую строку), нормализуем только пробелы
+        return value.strip() if value.strip() else ''
     
     def get_cover_image_url(self, obj):
         if obj.cover_image:
@@ -68,10 +70,11 @@ class PageListSerializer(serializers.ModelSerializer):
         }
     
     def validate_title(self, value):
-        # Разрешаем пустую строку
-        if value is None or value.strip() == '':
+        # Разрешаем пустую строку при обновлении
+        if value is None:
             return ''
-        return value.strip()
+        # Возвращаем как есть (включая пустую строку), нормализуем только пробелы
+        return value.strip() if value.strip() else ''
     
     def get_blocks_count(self, obj):
         return obj.blocks.count()
