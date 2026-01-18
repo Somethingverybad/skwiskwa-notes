@@ -1,8 +1,9 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from .models import Page, Block, Comment
 from .serializers import (
     PageSerializer, PageListSerializer, 
@@ -57,6 +58,48 @@ class PageViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(new_page)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['post'])
+    def toggle_share(self, request, pk=None):
+        """Включение/выключение публичного доступа к странице"""
+        page = self.get_object()
+        page.is_public = not page.is_public
+        if page.is_public and not page.share_token:
+            page.generate_share_token()
+        elif not page.is_public:
+            page.share_token = None
+        page.save()
+        serializer = self.get_serializer(page)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def generate_share_link(self, request, pk=None):
+        """Генерация новой ссылки для шаринга"""
+        page = self.get_object()
+        token = page.generate_share_token()
+        return Response({
+            'share_token': token,
+            'share_url': f"{request.scheme}://{request.get_host()}/share/{token}"
+        })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def public_page_by_token(request, token):
+    """Публичный доступ к странице по токену"""
+    page = get_object_or_404(Page, share_token=token, is_public=True)
+    serializer = PageSerializer(page, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def public_blocks_by_token(request, token):
+    """Публичный доступ к блокам страницы по токену"""
+    page = get_object_or_404(Page, share_token=token, is_public=True)
+    blocks = page.blocks.all().order_by('order', 'created_at')
+    serializer = BlockSerializer(blocks, many=True, context={'request': request})
+    return Response(serializer.data)
 
 
 class BlockViewSet(viewsets.ModelViewSet):
@@ -77,6 +120,9 @@ class BlockViewSet(viewsets.ModelViewSet):
         page = Page.objects.get(id=page_id)
         if page.owner != self.request.user:
             raise PermissionError("Вы не можете создавать блоки на этой странице")
+        # Убеждаемся, что format установлен
+        if 'format' not in serializer.validated_data or serializer.validated_data['format'] is None:
+            serializer.validated_data['format'] = {}
         serializer.save()
     
     def list(self, request, *args, **kwargs):

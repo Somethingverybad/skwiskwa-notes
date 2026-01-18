@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Block } from '../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { FiMove, FiTrash2 } from 'react-icons/fi';
+import { FiMove, FiTrash2, FiBold, FiItalic, FiChevronUp, FiChevronDown } from 'react-icons/fi';
 import { useDropzone, Accept } from 'react-dropzone';
 
 interface BlockComponentProps {
@@ -10,10 +10,29 @@ interface BlockComponentProps {
   onUpdate: (blockId: number, data: Partial<Block>) => void;
   onDelete: (blockId: number) => void;
   onFileUpload: (blockId: number, file: File) => void;
+  onMoveUp?: (blockId: number) => void;
+  onMoveDown?: (blockId: number) => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  isEditMode?: boolean;
+  uploadProgress?: number; // Прогресс загрузки файла (0-100)
 }
 
-function BlockComponent({ block, onUpdate, onDelete, onFileUpload }: BlockComponentProps) {
+function BlockComponent({ 
+  block, 
+  onUpdate, 
+  onDelete, 
+  onFileUpload,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp = false,
+  canMoveDown = false,
+  isEditMode = true,
+  uploadProgress,
+}: BlockComponentProps) {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   const [content, setContent] = useState(block.content);
+  const [format, setFormat] = useState(block.format || {});
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const {
@@ -33,7 +52,8 @@ function BlockComponent({ block, onUpdate, onDelete, onFileUpload }: BlockCompon
 
   useEffect(() => {
     setContent(block.content);
-  }, [block.content]);
+    setFormat(block.format || {});
+  }, [block.content, block.format]);
 
   useEffect(() => {
     adjustTextareaHeight();
@@ -53,9 +73,22 @@ function BlockComponent({ block, onUpdate, onDelete, onFileUpload }: BlockCompon
   };
 
   const handleBlur = () => {
-    if (content !== block.content) {
-      onUpdate(block.id, { content });
+    const hasChanges = content !== block.content || JSON.stringify(format) !== JSON.stringify(block.format || {});
+    if (hasChanges) {
+      onUpdate(block.id, { content, format });
     }
+  };
+
+  const handleFormatChange = (key: string, value: any) => {
+    const newFormat = { ...format, [key]: value };
+    setFormat(newFormat);
+    onUpdate(block.id, { format: newFormat });
+  };
+
+  const toggleFormat = (key: string) => {
+    const newFormat = { ...format, [key]: !format[key] };
+    setFormat(newFormat);
+    onUpdate(block.id, { format: newFormat });
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,6 +107,15 @@ function BlockComponent({ block, onUpdate, onDelete, onFileUpload }: BlockCompon
     maxFiles: 1,
   });
 
+  const getTextStyle = () => {
+    const style: React.CSSProperties = {};
+    if (format.color) style.color = format.color;
+    if (format.backgroundColor) style.backgroundColor = format.backgroundColor;
+    if (format.bold) style.fontWeight = 'bold';
+    if (format.italic) style.fontStyle = 'italic';
+    return style;
+  };
+
   const renderBlockContent = () => {
     switch (block.block_type) {
       case 'text':
@@ -83,14 +125,61 @@ function BlockComponent({ block, onUpdate, onDelete, onFileUpload }: BlockCompon
       case 'quote':
       case 'list':
         return (
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleContentChange}
-            onBlur={handleBlur}
-            placeholder={getPlaceholder(block.block_type)}
-            rows={1}
-          />
+          <div className="text-block-container">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={handleContentChange}
+              onBlur={handleBlur}
+              placeholder={getPlaceholder(block.block_type)}
+              rows={1}
+              style={getTextStyle()}
+              disabled={!isEditMode}
+              readOnly={!isEditMode}
+            />
+            {isEditMode && (block.block_type === 'text' || block.block_type === 'heading1' || 
+              block.block_type === 'heading2' || block.block_type === 'heading3') && (
+              <div className="format-toolbar">
+                <button 
+                  className={`format-btn ${format.bold ? 'active' : ''}`}
+                  onClick={() => toggleFormat('bold')}
+                  title="Жирный"
+                >
+                  <FiBold />
+                </button>
+                <button 
+                  className={`format-btn ${format.italic ? 'active' : ''}`}
+                  onClick={() => toggleFormat('italic')}
+                  title="Курсив"
+                >
+                  <FiItalic />
+                </button>
+                <div className="color-separator"></div>
+                <div className="color-options-row">
+                  {['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500'].map(color => (
+                    <button
+                      key={color}
+                      className={`color-option-inline ${format.color === color ? 'active' : ''}`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => {
+                        handleFormatChange('color', format.color === color ? undefined : color);
+                      }}
+                      title={color}
+                    />
+                  ))}
+                  <button
+                    className={`color-option-inline remove ${!format.color ? 'active' : ''}`}
+                    onClick={() => {
+                      handleFormatChange('color', undefined);
+                    }}
+                    title="Убрать цвет"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         );
 
       case 'checkbox':
@@ -109,6 +198,7 @@ function BlockComponent({ block, onUpdate, onDelete, onFileUpload }: BlockCompon
               placeholder="Элемент списка"
               rows={1}
               className={block.checked ? 'checked-text' : ''}
+              style={getTextStyle()}
             />
           </div>
         );
@@ -136,11 +226,23 @@ function BlockComponent({ block, onUpdate, onDelete, onFileUpload }: BlockCompon
             ) : (
               <div {...getRootProps()} className={`file-upload-zone ${isDragActive ? 'active' : ''}`}>
                 <input {...getInputProps()} />
-                <p>
-                  {isDragActive
-                    ? 'Отпустите файл здесь'
-                    : `Перетащите ${getFileTypeText(block.block_type)} или нажмите для выбора`}
-                </p>
+                {uploadProgress !== undefined && uploadProgress > 0 ? (
+                  <div className="upload-progress-container">
+                    <div className="upload-progress-bar">
+                      <div 
+                        className="upload-progress-fill" 
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="upload-progress-text">{uploadProgress}%</p>
+                  </div>
+                ) : (
+                  <p>
+                    {isDragActive
+                      ? 'Отпустите файл здесь'
+                      : `Перетащите ${getFileTypeText(block.block_type)} или нажмите для выбора`}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -156,11 +258,23 @@ function BlockComponent({ block, onUpdate, onDelete, onFileUpload }: BlockCompon
             ) : (
               <div {...getRootProps()} className={`file-upload-zone ${isDragActive ? 'active' : ''}`}>
                 <input {...getInputProps()} />
-                <p>
-                  {isDragActive
-                    ? 'Отпустите файл здесь'
-                    : 'Перетащите файл или нажмите для выбора'}
-                </p>
+                {uploadProgress !== undefined && uploadProgress > 0 ? (
+                  <div className="upload-progress-container">
+                    <div className="upload-progress-bar">
+                      <div 
+                        className="upload-progress-fill" 
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="upload-progress-text">{uploadProgress}%</p>
+                  </div>
+                ) : (
+                  <p>
+                    {isDragActive
+                      ? 'Отпустите файл здесь'
+                      : 'Перетащите файл или нажмите для выбора'}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -178,15 +292,39 @@ function BlockComponent({ block, onUpdate, onDelete, onFileUpload }: BlockCompon
       className="notion-block"
       data-type={block.block_type}
     >
-      <div className="block-actions">
-        <button {...attributes} {...listeners}>
-          <FiMove />
-        </button>
-        <button onClick={() => onDelete(block.id)}>
-          <FiTrash2 />
-        </button>
+      {isEditMode && (
+        <div className="block-actions">
+          {!isMobile && (
+            <button {...attributes} {...listeners}>
+              <FiMove />
+            </button>
+          )}
+          {isMobile && onMoveUp && canMoveUp && (
+            <button 
+              onClick={() => onMoveUp(block.id)}
+              className="mobile-move-btn"
+              title="Переместить вверх"
+            >
+              <FiChevronUp />
+            </button>
+          )}
+          {isMobile && onMoveDown && canMoveDown && (
+            <button 
+              onClick={() => onMoveDown(block.id)}
+              className="mobile-move-btn"
+              title="Переместить вниз"
+            >
+              <FiChevronDown />
+            </button>
+          )}
+          <button onClick={() => onDelete(block.id)}>
+            <FiTrash2 />
+          </button>
+        </div>
+      )}
+      <div className="block-content-wrapper">
+        {renderBlockContent()}
       </div>
-      {renderBlockContent()}
     </div>
   );
 }

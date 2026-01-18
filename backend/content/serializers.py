@@ -12,10 +12,11 @@ class CommentSerializer(serializers.ModelSerializer):
 class BlockSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     file_url = serializers.SerializerMethodField()
+    format = serializers.JSONField(default=dict, required=False)
     
     class Meta:
         model = Block
-        fields = ['id', 'page', 'block_type', 'content', 'file', 'file_url', 
+        fields = ['id', 'page', 'block_type', 'content', 'format', 'file', 'file_url', 
                   'file_type', 'file_size', 'checked', 'order', 'parent', 
                   'created_at', 'updated_at', 'comments']
         read_only_fields = ['created_at', 'updated_at']
@@ -31,12 +32,14 @@ class BlockSerializer(serializers.ModelSerializer):
 class PageSerializer(serializers.ModelSerializer):
     blocks = BlockSerializer(many=True, read_only=True)
     cover_image_url = serializers.SerializerMethodField()
+    share_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Page
-        fields = ['id', 'title', 'icon', 'cover_image', 'cover_image_url', 
-                  'parent', 'created_at', 'updated_at', 'blocks']
-        read_only_fields = ['created_at', 'updated_at']
+        fields = ['id', 'title', 'icon', 'background_color', 'cover_image', 'cover_image_url', 
+                  'parent', 'is_public', 'share_token', 'share_url',
+                  'created_at', 'updated_at', 'blocks']
+        read_only_fields = ['created_at', 'updated_at', 'share_token']
         extra_kwargs = {
             'title': {'allow_blank': True, 'required': False},
         }
@@ -54,6 +57,13 @@ class PageSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(obj.cover_image.url)
+        return None
+    
+    def get_share_url(self, obj):
+        if obj.is_public and obj.share_token:
+            request = self.context.get('request')
+            if request:
+                return f"{request.scheme}://{request.get_host()}/share/{obj.share_token}"
         return None
 
 

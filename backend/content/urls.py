@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import PageViewSet, BlockViewSet, CommentViewSet
+from .views import PageViewSet, BlockViewSet, CommentViewSet, public_page_by_token, public_blocks_by_token
 from .auth_views import register, login, me, logout
 
 router = DefaultRouter()
@@ -16,6 +16,10 @@ urlpatterns = [
     path('auth/logout/', logout, name='logout'),
     path('auth/me/', me, name='me'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
+    # Public sharing
+    path('public/share/<str:token>/', public_page_by_token, name='public_page_by_token'),
+    path('public/share/<str:token>/blocks/', public_blocks_by_token, name='public_blocks_by_token'),
     
     # API routes
     path('', include(router.urls)),

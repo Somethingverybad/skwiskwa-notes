@@ -12,9 +12,9 @@ services:
       - "8000"
     environment:
       - DEBUG=0
-      - DJANGO_ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+      - DJANGO_ALLOWED_HOSTS=skwiskwa.e-tree.su,www.skwiskwa.e-tree.su
       - DATABASE_ENGINE=django.db.backends.postgresql
-      - DATABASE_NAME=notion_clonedo
+      - DATABASE_NAME=notion_clone
       - DATABASE_USER=postgres
       - DATABASE_PASSWORD=${DB_PASSWORD:-changeme}
       - DATABASE_HOST=db

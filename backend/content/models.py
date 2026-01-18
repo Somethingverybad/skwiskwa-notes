@@ -1,16 +1,30 @@
 from django.db import models
 from django.contrib.auth.models import User
+import secrets
 
 
 class Page(models.Model):
     """Модель страницы (аналог страницы в Notion)"""
     title = models.CharField(max_length=255, default='Без названия', blank=True)
     icon = models.CharField(max_length=50, null=True, blank=True)  # Эмодзи или иконка
+    background_color = models.CharField(max_length=7, null=True, blank=True)  # HEX цвет фона (например, #FF0000)
     cover_image = models.ImageField(upload_to='covers/', null=True, blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pages', null=True, blank=True)
+    
+    # Настройки шаринга
+    is_public = models.BooleanField(default=False)
+    share_token = models.CharField(max_length=32, unique=True, null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    
+    def generate_share_token(self):
+        """Генерация уникального токена для шаринга"""
+        if not self.share_token:
+            self.share_token = secrets.token_urlsafe(24)[:32]
+            self.save()
+        return self.share_token
     
     def save(self, *args, **kwargs):
         # Если title пустой, устанавливаем дефолтное значение ТОЛЬКО при создании новой страницы
@@ -47,6 +61,9 @@ class Block(models.Model):
     page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name='blocks')
     block_type = models.CharField(max_length=20, choices=BLOCK_TYPES, default='text')
     content = models.TextField(blank=True, default='')
+    
+    # Форматирование текста (JSON: {format: {bold: true, color: "#ff0000", ...}})
+    format = models.JSONField(default=dict, blank=True)
     
     # Для медиа-файлов
     file = models.FileField(upload_to='blocks/%Y/%m/%d/', null=True, blank=True)

@@ -27,6 +27,12 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    
+    // Не перенаправляем на /login для публичных страниц
+    const isPublicPath = originalRequest.url?.includes('/public/share/');
+    if (isPublicPath) {
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -45,7 +51,12 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
+        // Не перенаправляем, если это публичный путь или если мы уже на странице /login или /register
+        if (!window.location.pathname.startsWith('/share/') && 
+            !window.location.pathname.startsWith('/login') && 
+            !window.location.pathname.startsWith('/register')) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
@@ -73,6 +84,16 @@ export const api = {
   createPage: (data: Partial<Page>) => axiosInstance.post<Page>('/pages/', data),
   updatePage: (id: number, data: Partial<Page>) => axiosInstance.patch<Page>(`/pages/${id}/`, data),
   deletePage: (id: number) => axiosInstance.delete(`/pages/${id}/`),
+  toggleSharePage: (id: number) => axiosInstance.post<Page>(`/pages/${id}/toggle_share/`),
+  generateShareLink: (id: number) => axiosInstance.post<{share_token: string; share_url: string}>(`/pages/${id}/generate_share_link/`),
+  getPublicPage: (token: string) => {
+    // Для публичных страниц не требуется токен
+    return axios.get<Page>(`${API_URL}/public/share/${token}/`);
+  },
+  getPublicBlocks: (token: string) => {
+    // Для публичных блоков не требуется токен
+    return axios.get<Block[]>(`${API_URL}/public/share/${token}/blocks/`);
+  },
   
   // Blocks
   getBlocks: (pageId: number) => axiosInstance.get<Block[]>(`/blocks/?page=${pageId}`),
@@ -83,12 +104,18 @@ export const api = {
     axiosInstance.post('/blocks/reorder/', { blocks }),
   
   // File upload
-  uploadFile: (blockId: number, file: File) => {
+  uploadFile: (blockId: number, file: File, onUploadProgress?: (progress: number) => void) => {
     const formData = new FormData();
     formData.append('file', file);
     return axiosInstance.post<Block>(`/blocks/${blockId}/upload_file/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total && onUploadProgress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onUploadProgress(percentCompleted);
+        }
       },
     });
   },

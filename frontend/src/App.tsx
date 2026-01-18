@@ -10,6 +10,8 @@ import Register from './components/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import MobileMenu from './components/MobileMenu';
 import Loader from './components/Loader';
+import PublicPageView from './components/PublicPageView';
+import { FiEye, FiEdit3 } from 'react-icons/fi';
 
 function Dashboard() {
   const [pages, setPages] = useState<Page[]>([]);
@@ -17,7 +19,17 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isEditMode, setIsEditMode] = useState(() => {
+    // По умолчанию режим чтения (false), но проверяем localStorage
+    const saved = localStorage.getItem('mobile_edit_mode');
+    return saved === 'true';
+  });
   const { user, logout } = useAuth();
+  
+  // Сохраняем режим редактирования в localStorage
+  useEffect(() => {
+    localStorage.setItem('mobile_edit_mode', isEditMode.toString());
+  }, [isEditMode]);
   
   // Отслеживаем изменение размера окна
   useEffect(() => {
@@ -41,7 +53,7 @@ function Dashboard() {
       const response = await api.getPages();
       const pagesData = Array.isArray(response.data) 
         ? response.data 
-        : (response.data.results || []);
+        : ((response.data as any)?.results || []);
       
       setPages(pagesData);
       if (pagesData.length > 0 && !currentPage) {
@@ -138,40 +150,54 @@ function Dashboard() {
 
   return (
     <div className="app">
-      {/* Мобильное меню */}
-      {isMobile && (
-        <MobileMenu
-          isOpen={sidebarOpen}
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
-        />
-      )}
-
       {/* Мобильный header */}
       {isMobile ? (
         <div className="mobile-header">
+          <MobileMenu
+            isOpen={sidebarOpen}
+            onToggle={() => setSidebarOpen(!sidebarOpen)}
+          />
           <span className="mobile-header-title">
             {currentPage?.title && currentPage.title.trim() !== '' 
               ? currentPage.title 
               : 'Без названия'}
           </span>
-          <button
-            onClick={logout}
-            className="logout-button"
-          >
-            Выйти
-          </button>
+          <div className="mobile-header-actions">
+            <button
+              onClick={() => setIsEditMode(!isEditMode)}
+              className={`edit-mode-toggle ${isEditMode ? 'active' : ''}`}
+              title={isEditMode ? 'Режим чтения' : 'Режим редактирования'}
+            >
+              {isEditMode ? <FiEye size={20} /> : <FiEdit3 size={20} />}
+            </button>
+            <button
+              onClick={logout}
+              className="logout-button"
+            >
+              Выйти
+            </button>
+          </div>
         </div>
       ) : (
         <div className="desktop-header">
           <span className="desktop-header-username">
             {user?.username}
           </span>
-          <button
-            onClick={logout}
-            className="logout-button"
-          >
-            Выйти
-          </button>
+          <div className="desktop-header-actions">
+            <button
+              onClick={() => setIsEditMode(!isEditMode)}
+              className={`edit-mode-toggle ${isEditMode ? 'active' : ''}`}
+              title={isEditMode ? 'Режим чтения' : 'Режим редактирования'}
+            >
+              {isEditMode ? <FiEye size={18} /> : <FiEdit3 size={18} />}
+            </button>
+            <button
+              onClick={logout}
+              className="logout-button"
+            >
+              Выйти
+            </button>
+          </div>
         </div>
       )}
 
@@ -181,7 +207,9 @@ function Dashboard() {
         onSelectPage={loadPage}
         onCreatePage={handleCreatePage}
         onDeletePage={handleDeletePage}
+        onUpdatePage={handleUpdatePage}
         isOpen={sidebarOpen}
+        isEditMode={isEditMode}
         onClose={() => setSidebarOpen(false)}
       />
       <div className="main-content" style={{ marginTop: isMobile ? '56px' : '50px' }}>
@@ -190,6 +218,7 @@ function Dashboard() {
             page={currentPage}
             onUpdatePage={handleUpdatePage}
             onReload={() => loadPage(currentPage.id)}
+            isEditMode={isEditMode}
           />
         ) : (
           <div className="notion-page">
@@ -221,6 +250,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/share/:token" element={<PublicPageView />} />
           <Route
             path="/"
             element={
